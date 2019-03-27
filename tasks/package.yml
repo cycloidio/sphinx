@@ -1,8 +1,28 @@
 ---
 
 - name: Add backports repository for Jessie release
-  apt_repository: repo="deb http://ftp.debian.org/debian jessie-backports main" state=present
+  apt_repository: repo="deb http://ftp.debian.org/debian stretch-backports main" state=present
+  when: ansible_os_family == "Debian" and ansible_distribution_release == "stretch"
+
+# Because backports is not available anymore
+- name: Add stretch repository for Jessie release
+  apt_repository:
+    repo: deb-src deb http://ftp.debian.org/debian stretch main
+    state: present
+  tags:
+    - sphinx-apt
   when: ansible_os_family == "Debian" and ansible_distribution_release == "jessie"
+
+- name: set stretch* priority
+  copy:
+    content: |
+      Package: *
+      Pin: release o=Debian,n=stretch
+      Pin-Priority: 100
+    dest: /etc/apt/preferences.d/stretch.pref
+  tags:
+    - sphinx-apt
+   when: ansible_os_family == "Debian" and ansible_distribution_release == "jessie"
 
 - name: Install sphinx Debian package
   apt: name={{ item }} state=present update_cache=yes
